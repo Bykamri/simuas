@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Tambah Mata Kuliah</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="../../public/js/components/input.js"></script>
+    <script src="../../public/js/components/toast.js"></script>
+    <script src="../../public/js/utils/auth.js"></script>
+  </head>
+  <body class="bg-gray-100">
+    <div class="container mx-auto px-4 py-8">
+      <div class="flex justify-between items-center mb-8">
+        <h1 class="text-3xl font-bold">Tambah Mata Kuliah Baru</h1>
+        <a
+          href="../matakuliah.html"
+          class="text-indigo-600 hover:text-indigo-800"
+        >
+          Kembali ke Daftar
+        </a>
+      </div>
+
+      <div class="bg-white rounded-lg shadow-md p-6">
+        <form id="matakuliahForm" class="space-y-4">
+          <div id="formContainer" class="flex flex-col gap-5"></div>
+
+          <div class="flex space-x-4">
+            <button
+              type="submit"
+              class="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700"
+            >
+              Tambah Mata Kuliah
+            </button>
+            <button
+              type="reset"
+              class="bg-gray-500 text-white px-4 py-2 rounded-md hover:bg-gray-600"
+            >
+              Bersihkan Form
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <script>
+      const toast = new Toast();
+      const auth = new AuthService("../../api/auth.php");
+
+      function showToast(message, type = "success") {
+        toast.show(message, type);
+      }
+
+      document.addEventListener("DOMContentLoaded", async function () {
+        // Initialize form components
+        FormComponents.initializeInputs();
+
+        const formContainer = document.getElementById("formContainer");
+
+        // Create form fields using the FormComponents class
+        const kodeMKInput = createTextInput({
+          label: "Kode Mata Kuliah",
+          id: "kodemk",
+          required: true,
+          maxLength: 10,
+          placeholder: "Masukkan kode mata kuliah",
+        });
+
+        const namaMKInput = createTextInput({
+          label: "Nama Mata Kuliah",
+          id: "nama_matkul",
+          required: true,
+          maxLength: 100,
+          placeholder: "Masukkan nama mata kuliah",
+        });
+
+        const sksInput = createNumberInput({
+          label: "SKS",
+          id: "sks",
+          required: true,
+          min: 1,
+          max: 6,
+        });
+
+        const jumlahKelasInput = createNumberInput({
+          label: "Jumlah Kelas",
+          id: "jumlah_kelas",
+          required: true,
+          min: 1,
+        });
+
+        // Add all inputs to the form
+        formContainer.appendChild(kodeMKInput);
+        formContainer.appendChild(namaMKInput);
+        formContainer.appendChild(sksInput);
+        formContainer.appendChild(jumlahKelasInput);
+
+        auth.setRedirectUrl("../../index.html");
+
+        // Initial auth check
+        await auth.checkAuth();
+
+        // Start periodic auth checks
+        auth.startAuthCheck(5);
+
+        $("#matakuliahForm").submit(function (e) {
+          e.preventDefault();
+          const formData = new FormData(this);
+
+          $.ajax({
+            url: "../../api/matakuliah.php",
+            type: "POST",
+            data: formData,
+            processData: false,
+            contentType: false,
+            success: function (response) {
+              let jsonResponse =
+                typeof response === "string" ? JSON.parse(response) : response;
+
+              if (jsonResponse.success) {
+                showToast(
+                  jsonResponse.message || "Mata kuliah berhasil ditambahkan"
+                );
+                setTimeout(
+                  () => (window.location.href = "../matakuliah.html"),
+                  1000
+                );
+              } else {
+                showToast(
+                  jsonResponse.message || "Gagal menambahkan mata kuliah",
+                  "error"
+                );
+              }
+            },
+            error: function (xhr) {
+              try {
+                const response = JSON.parse(xhr.responseText);
+                showToast(
+                  response.message || "Gagal menambahkan mata kuliah",
+                  "error"
+                );
+              } catch (e) {
+                showToast("Gagal menambahkan mata kuliah", "error");
+              }
+            },
+          });
+        });
+      });
+    </script>
+  </body>
+</html>

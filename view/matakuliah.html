@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Sistem Manajemen Matakuliah</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="../public/js/components/sidebar.js"></script>
+    <script src="../public/js/components/navbar.js"></script>
+    <script src="../public/js/components/toast.js"></script>
+    <script src="../public/js/components/label.js"></script>
+    <script src="../public/js/components/dialog.js"></script>
+    <script src="../public/js/utils/auth.js"></script>
+    <script src="../public/js/components/pagination.js"></script>
+  </head>
+  <body class="bg-gray-100">
+    <div class="ml-[17rem]">
+      <div class="mt-32 mb-12">
+        <div
+          class="bg-white shadow-md container mx-auto px-4 rounded-lg shadow-md mt-8 h-min"
+        >
+          <div class="flex justify-between items-center p-6 mb-5">
+            <h2 class="text-xl font-semibold">Daftar Matakuliah</h2>
+            <a
+              href="./matakuliah/add_matakuliah.html"
+              class="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 transition-colors"
+            >
+              Tambahkan Matakuliah
+            </a>
+          </div>
+
+          <div class="">
+            <table class="min-w-full divide-y divide-gray-200">
+              <thead class="bg-gray-50">
+                <tr>
+                  <th
+                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                  >
+                    Kode Matakuliah
+                  </th>
+                  <th
+                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                  >
+                    Nama Matakuliah
+                  </th>
+                  <th
+                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                  >
+                    SKS
+                  </th>
+                  <th
+                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                  >
+                    Jumlah Kelas
+                  </th>
+                  <th
+                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                  >
+                    Aksi
+                  </th>
+                </tr>
+              </thead>
+              <tbody
+                id="matakuliahList"
+                class="bg-white divide-y divide-gray-200"
+              >
+                <!-- Data matakuliah akan dimuat di sini -->
+              </tbody>
+            </table>
+
+            <!-- Pagination container -->
+            <div id="paginationContainer"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      document.addEventListener("DOMContentLoaded", () => {
+        let allMatakuliah = [];
+        let deleteKodeMK = null;
+
+        // Initialize components
+        const toast = new Toast();
+        const dialog = new Dialog({
+          title: "Hapus Matakuliah",
+          message:
+            "Apakah anda yakin ingin menghapus matakuliah ini? Tindakan ini tidak dapat dibatalkan.",
+          confirmText: "Hapus",
+          cancelText: "Batal",
+          onConfirm: () => {
+            deleteMatakuliah();
+          },
+          onCancel: () => {
+            console.log("Cancelled");
+          },
+        });
+
+        // Initialize navbar
+        const navbar = new Navbar({
+          containerId: "navbar",
+          title: "Dashboard SIMUAS",
+          onLogout: () => {
+            toast.show("Logout successful", "success");
+            setTimeout(() => {
+              window.location.href = "../index.html";
+            }, 1000);
+          },
+        });
+
+        // Initialize sidebar
+        const sidebar = new Sidebar({
+          menuItems: [
+            { name: "Home", path: "/uas/view/index.html" },
+            { name: "Mahasiswa", path: "/uas/view/mahasiswa.html" },
+            { name: "Dosen", path: "/uas/view/mahasiswa.html" },
+            { name: "Matakuliah", path: "/uas/view/mahasiswa.html" },
+            { name: "Grafik", path: "/uas/view/mahasiswa.html" },
+            { name: "Laporan", path: "/uas/view/mahasiswa.html" },
+          ],
+        });
+
+        // Initialize pagination
+        const pagination = new Pagination({
+          containerId: "paginationContainer",
+          pageSize: 10,
+          onPageChange: (page, pageSize) => {
+            displayMatakuliah(page, pageSize);
+          },
+        });
+
+        // Function to display matakuliah data
+        function displayMatakuliah(page, pageSize) {
+          const start = (page - 1) * pageSize;
+          const end = start + pageSize;
+          const paginatedData = allMatakuliah.slice(start, end);
+
+          $("#matakuliahList").empty();
+          paginatedData.forEach(function (matkul) {
+            const row = `
+              <tr class="hover:bg-gray-50 transition-colors">
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <span class="text-indigo-600">${matkul.kodemk}</span>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">${matkul.nama_matkul}</td>
+                <td class="px-6 py-4 whitespace-nowrap">${matkul.sks}</td>
+                <td class="px-6 py-4 whitespace-nowrap">${matkul.jumlah_kelas}</td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <div class="flex space-x-2">
+                    <button onclick="window.location.href='./matakuliah/edit_matakuliah.html?kodemk=${matkul.kodemk}'"
+                            class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded inline-flex items-center space-x-2">
+                      <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                      </svg>
+                      <span>Edit</span>
+                    </button>
+                    <button onclick="showDeleteConfirmation('${matkul.kodemk}')"
+                            class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded inline-flex items-center space-x-2">
+                      <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                      </svg>
+                      <span>Delete</span>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            `;
+            $("#matakuliahList").append(row);
+          });
+        }
+
+        // Function to load matakuliah data
+        function loadMatakuliah() {
+          $.ajax({
+            url: "../api/matakuliah.php",
+            type: "GET",
+            success: function (matakuliahs) {
+              allMatakuliah = matakuliahs;
+              pagination.updateTotalItems(matakuliahs.length);
+              displayMatakuliah(1, pagination.pageSize);
+            },
+            error: function () {
+              toast.show("Error memuat data matakuliah", "error");
+            },
+          });
+        }
+
+        // Function to show delete confirmation
+        window.showDeleteConfirmation = function (kodemk) {
+          deleteKodeMK = kodemk;
+          dialog.show();
+        };
+
+        // Function to delete matakuliah
+        function deleteMatakuliah() {
+          if (!deleteKodeMK) return;
+
+          $.ajax({
+            url: "../api/matakuliah.php",
+            type: "DELETE",
+            contentType: "application/json",
+            data: JSON.stringify({ kodemk: deleteKodeMK }),
+            success: function (response) {
+              if (response.success) {
+                toast.show("Matakuliah berhasil dihapus", "success");
+                loadMatakuliah();
+              } else {
+                toast.show("Gagal menghapus matakuliah", "error");
+              }
+            },
+            error: function () {
+              toast.show("Error saat menghapus matakuliah", "error");
+            },
+          });
+        }
+
+        // Initialize authentication
+        const auth = new AuthService("../api/auth.php");
+        auth.setRedirectUrl("../index.html");
+        auth.startAuthCheck(5);
+
+        auth.checkAuth().then((user) => {
+          if (user) {
+            auth.updateUserGreeting(user);
+            loadMatakuliah();
+          }
+        });
+      });
+    </script>
+  </body>
+</html>

@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Tambah Mahasiswa</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="../../public/js/components/toast.js"></script>
+    <script src="../../public/js/components/input.js"></script>
+    <script src="../../public/js/utils/auth.js"></script>
+  </head>
+  <body class="bg-gray-100">
+    <div class="container mx-auto px-4 py-8">
+      <div class="flex justify-between items-center mb-8">
+        <h1 class="text-3xl font-bold">Tambah Mahasiswa Baru</h1>
+        <a
+          href="../mahasiswa.html"
+          class="text-indigo-600 hover:text-indigo-800"
+        >
+          Kembali ke Daftar
+        </a>
+      </div>
+
+      <div class="bg-white rounded-lg shadow-md p-6">
+        <form
+          id="mahasiswaForm"
+          class="space-y-4"
+          enctype="multipart/form-data"
+        >
+          <div class="flex gap-12">
+            <!-- File Upload -->
+            <div class="flex flex-col gap-10">
+              <div id="photoInputContainer"></div>
+              <div id="pdfInputContainer"></div>
+            </div>
+            <!-- Field Input -->
+            <div class="flex flex-col gap-5 grow">
+              <div id="nbiInputContainer"></div>
+              <div id="namaInputContainer"></div>
+              <div id="emailInputContainer"></div>
+              <div id="alamatInputContainer"></div>
+              <div id="ipkInputContainer"></div>
+              <div id="sppInputContainer"></div>
+              <div id="prodiInputContainer"></div>
+              <div id="statusInputContainer"></div>
+            </div>
+          </div>
+          <div class="flex space-x-4">
+            <button
+              type="submit"
+              class="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700"
+            >
+              Tambah Mahasiswa
+            </button>
+            <button
+              type="reset"
+              class="bg-gray-500 text-white px-4 py-2 rounded-md hover:bg-gray-600"
+            >
+              Bersihkan Form
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <script>
+      const toast = new Toast();
+      const auth = new AuthService("../../api/auth.php");
+
+      function showToast(message, type = "success") {
+        toast.show(message, type);
+      }
+
+      $(document).ready(async function () {
+        // Initialize form components
+        FormComponents.initializeInputs();
+
+        // Set up auth service
+        auth.setRedirectUrl("../../index.html");
+
+        // Initial auth check
+        await auth.checkAuth();
+
+        // Start periodic auth checks
+        auth.startAuthCheck(5);
+
+        // Initialize file input for photo
+        const photoInput = createFileInput({
+          label: "Foto",
+          id: "photo",
+          accept: "image/*",
+          maxSize: 5 * 1024 * 1024,
+          previewContainerId: "imagePreview",
+          allowedTypes: ["image/jpeg", "image/jpg", "image/png", "image/gif"],
+          onFileSelected: (file, container) => {
+            const reader = new FileReader();
+            reader.onload = function (e) {
+              container.innerHTML = `<img src="${e.target.result}" alt="Preview" class="h-32 w-32 object-cover rounded-md">`;
+              container.classList.remove("hidden");
+            };
+            reader.readAsDataURL(file);
+          },
+        });
+        $("#photoInputContainer").append(photoInput);
+
+        // Initialize file input for PDF
+        const pdfInput = createFileInput({
+          label: "Dokumen PDF",
+          id: "pdf_file",
+          accept: ".pdf",
+          maxSize: 10 * 1024 * 1024,
+          previewContainerId: "pdfPreview",
+          allowedTypes: ["application/pdf"],
+          onFileSelected: (file, container) => {
+            container.innerHTML = `
+              <div class="flex items-center space-x-2 text-sm text-gray-600">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
+                </svg>
+                <span>${file.name}</span>
+              </div>
+            `;
+            container.classList.remove("hidden");
+          },
+        });
+        $("#pdfInputContainer").append(pdfInput);
+
+        // Initialize text inputs
+        $("#nbiInputContainer").append(
+          createNumberInput({
+            label: "NBI",
+            id: "nbi",
+            required: true,
+            maxLength: 10,
+          })
+        );
+
+        $("#namaInputContainer").append(
+          createTextInput({
+            label: "Nama",
+            id: "nama",
+            required: true,
+            maxLength: 100,
+          })
+        );
+
+        $("#emailInputContainer").append(
+          createEmailInput({
+            label: "Email",
+            id: "email",
+            required: true,
+            placeholder: "example@email.com",
+          })
+        );
+
+        $("#alamatInputContainer").append(
+          createTextArea({
+            label: "Alamat",
+            id: "alamat",
+            rows: 3,
+          })
+        );
+
+        $("#ipkInputContainer").append(
+          createNumberInput({
+            label: "IPK",
+            id: "ipk",
+            step: "0.01",
+            min: 0,
+            max: 4.0,
+          })
+        );
+
+        $("#sppInputContainer").append(
+          createCurrencyInput({
+            label: "SPP",
+            id: "spp",
+          })
+        );
+
+        $("#prodiInputContainer").append(
+          createTextInput({
+            label: "Program Studi",
+            id: "prodi",
+            required: true,
+            maxLength: 10,
+          })
+        );
+
+        $("#statusInputContainer").append(
+          createSelectInput({
+            label: "Status",
+            id: "status",
+            required: true,
+            options: [
+              { value: "aktif", label: "Aktif" },
+              { value: "mengundurkan_diri", label: "Mengundurkan Diri" },
+              { value: "lulus", label: "Lulus" },
+            ],
+          })
+        );
+
+        checkSession();
+
+        $("#mahasiswaForm").on("reset", function () {
+          $("#imagePreview").addClass("hidden");
+          $("#pdfPreview").addClass("hidden");
+          $("#clearPhoto").addClass("hidden");
+          $("#clearPdf").addClass("hidden");
+          $("#status").val("aktif");
+        });
+
+        $("#mahasiswaForm").submit(function (e) {
+          e.preventDefault();
+          const formData = new FormData(this);
+          let sppValue = $("#spp").val().replace(/[^\d]/g, "");
+          formData.set("spp", sppValue);
+          $.ajax({
+            url: "../../api/mahasiswa.php",
+            type: "POST",
+            data: formData,
+            processData: false,
+            contentType: false,
+            success: function (response) {
+              let jsonResponse =
+                typeof response === "string" ? JSON.parse(response) : response;
+
+              if (jsonResponse.success) {
+                showToast(
+                  jsonResponse.message || "Mahasiswa berhasil ditambahkan"
+                );
+                setTimeout(
+                  () => (window.location.href = "../mahasiswa.html"),
+                  1000
+                );
+              } else {
+                showToast(
+                  jsonResponse.message || "Gagal menambahkan mahasiswa",
+                  "error"
+                );
+              }
+            },
+            error: function (xhr) {
+              try {
+                const response = JSON.parse(xhr.responseText);
+                showToast(
+                  response.message || "Gagal menambahkan mahasiswa",
+                  "error"
+                );
+              } catch (e) {
+                showToast("Gagal menambahkan mahasiswa", "error");
+              }
+            },
+          });
+        });
+      });
+    </script>
+  </body>
+</html>

@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Login</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/js-sha256/0.9.0/sha256.min.js"></script>
+    <script src="./public/js/components/toast.js"></script>
+  </head>
+  <body
+    class="bg-gray-100 flex justify-center items-center w-screen min-h-screen"
+  >
+    <div
+      class="bg-white rounded-lg shadow-md p-6 flex min-h-full flex-col justify-center w-[34rem] px-6 py-12 lg:px-8"
+    >
+      <div class="sm:mx-auto sm:w-full sm:max-w-sm">
+        <img
+          class="mx-auto h-10 w-auto"
+          src="https://tailwindui.com/plus/img/logos/mark.svg?color=indigo&shade=600"
+          alt="Your Company"
+        />
+        <h2
+          class="mt-10 text-center text-2xl/9 font-bold tracking-tight text-gray-900"
+        >
+          Sign in to your account
+        </h2>
+      </div>
+
+      <div class="mt-10 sm:mx-auto sm:w-full sm:max-w-sm">
+        <form class="space-y-6" id="loginForm">
+          <div>
+            <label
+              for="username"
+              class="block text-sm/6 font-medium text-gray-900"
+              >Username</label
+            >
+            <div class="mt-2">
+              <input
+                type="text"
+                name="username"
+                id="username"
+                required
+                class="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6"
+              />
+            </div>
+          </div>
+
+          <div>
+            <div class="flex items-center justify-between">
+              <label
+                for="password"
+                class="block text-sm/6 font-medium text-gray-900"
+                >Password</label
+              >
+            </div>
+            <div class="mt-2 relative">
+              <input
+                type="password"
+                name="password"
+                id="password"
+                required
+                class="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6 pr-10"
+              />
+              <button
+                type="button"
+                id="togglePassword"
+                class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  id="eyeIcon"
+                >
+                  <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z" />
+                  <circle cx="12" cy="12" r="3" />
+                </svg>
+              </button>
+            </div>
+          </div>
+
+          <div>
+            <button
+              type="submit"
+              class="flex w-full justify-center rounded-md bg-indigo-600 px-3 py-1.5 text-sm/6 font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
+            >
+              Sign in
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <script>
+      const toast = new Toast();
+      function showToast(message, type = "success") {
+        toast.show(message, type);
+      }
+
+      $(document).ready(function () {
+        $.ajax({
+          url: "./api/auth.php",
+          type: "POST",
+          contentType: "application/json",
+          data: JSON.stringify({
+            action: "check_session",
+          }),
+          success: function (response) {
+            if (response.success) {
+              window.location.href = "./view/index.html";
+            }
+          },
+        });
+
+        $("#loginForm").on("submit", function (e) {
+          e.preventDefault();
+          const username = $("#username").val();
+          const password = $("#password").val();
+
+          $.ajax({
+            url: "./api/auth.php",
+            type: "POST",
+            contentType: "application/json",
+            data: JSON.stringify({
+              action: "login",
+              username: username,
+              password: password,
+            }),
+            success: function (response) {
+              if (response.success) {
+                showToast("Login successful", "success");
+                setTimeout(function () {
+                  window.location.href = "./view/index.html";
+                }, 1000);
+              } else {
+                showToast(response.message, "error");
+              }
+            },
+            error: function () {
+              showToast("An error occurred", "error");
+            },
+          });
+        });
+
+        $("#togglePassword").on("click", function () {
+          const $password = $("#password");
+          const $icon = $("#eyeIcon");
+          const type =
+            $password.attr("type") === "password" ? "text" : "password";
+          $password.attr("type", type);
+
+          if (type === "text") {
+            $icon.html(`<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-10-7-10-7a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 10 7 10 7a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
+              <line x1="1" y1="1" x2="23" y2="23"/>`);
+          } else {
+            $icon.html(`<path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/>
+              <circle cx="12" cy="12" r="3"/>`);
+          }
+        });
+      });
+    </script>
+  </body>
+</html>

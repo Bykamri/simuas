@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Sistem Manajemen Dosen</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="../public/js/components/sidebar.js"></script>
+    <script src="../public/js/components/navbar.js"></script>
+    <script src="../public/js/components/toast.js"></script>
+    <script src="../public/js/components/label.js"></script>
+    <script src="../public/js/utils/auth.js"></script>
+    <script src="../public/js/components/pagination.js"></script>
+  </head>
+  <body class="bg-gray-100">
+    <div class="ml-[17rem]">
+      <div class="mt-32 mb-12">
+        <div
+          class="bg-white shadow-md container mx-auto px-4 rounded-lg shadow-md mt-8 h-min"
+        >
+          <div class="flex justify-between items-center p-6 mb-5">
+            <h2 class="text-xl font-semibold">Daftar Dosen</h2>
+            <a
+              href="./dosen/add_dosen.html"
+              class="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 transition-colors"
+            >
+              Tambahkan Dosen
+            </a>
+          </div>
+
+          <div class="">
+            <table class="min-w-full divide-y divide-gray-200">
+              <thead class="bg-gray-50">
+                <tr>
+                  <th
+                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                  >
+                    Kode Dosen
+                  </th>
+                  <th
+                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                  >
+                    Nama
+                  </th>
+                  <th
+                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                  >
+                    Prodi
+                  </th>
+                  <th
+                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                  >
+                    Jabatan
+                  </th>
+                  <th
+                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                  >
+                    Aksi
+                  </th>
+                </tr>
+              </thead>
+              <tbody id="dosenList" class="bg-white divide-y divide-gray-200">
+                <!-- Data dosen akan dimuat di sini -->
+              </tbody>
+            </table>
+
+            <!-- Pagination container -->
+            <div id="paginationContainer"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      document.addEventListener("DOMContentLoaded", () => {
+        let allDosen = [];
+
+        // Initialize components
+        const toast = new Toast();
+
+        // Initialize navbar
+        const navbar = new Navbar({
+          containerId: "navbar",
+          title: "Dashboard SIMUAS",
+          onLogout: () => {
+            toast.show("Logout successful", "success");
+            setTimeout(() => {
+              window.location.href = "../index.html";
+            }, 1000);
+          },
+        });
+
+        // Initialize sidebar
+        const sidebar = new Sidebar({
+          menuItems: [
+            { name: "Home", path: "/uas/view/index.html" },
+            { name: "Mahasiswa", path: "/uas/view/mahasiswa.html" },
+            { name: "Dosen", path: "/uas/view/mahasiswa.html" },
+            { name: "Matakuliah", path: "/uas/view/mahasiswa.html" },
+            { name: "Grafik", path: "/uas/view/mahasiswa.html" },
+            { name: "Laporan", path: "/uas/view/mahasiswa.html" },
+          ],
+        });
+
+        // Initialize pagination
+        const pagination = new Pagination({
+          containerId: "paginationContainer",
+          pageSize: 10,
+          onPageChange: (page, pageSize) => {
+            displayDosen(page, pageSize);
+          },
+        });
+
+        // Function to display dosen data
+        function displayDosen(page, pageSize) {
+          const start = (page - 1) * pageSize;
+          const end = start + pageSize;
+          const paginatedData = allDosen.slice(start, end);
+
+          $("#dosenList").empty();
+          paginatedData.forEach(function (dosen) {
+            const row = `
+              <tr class="hover:bg-gray-50 transition-colors">
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <span class="text-indigo-600">${dosen.kodedsn}</span>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">${dosen.nama}</td>
+                <td class="px-6 py-4 whitespace-nowrap">${
+                  dosen.prodi || "-"
+                }</td>
+                <td class="px-6 py-4 whitespace-nowrap">${
+                  dosen.jabatan || "-"
+                }</td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <a href="./dosen/detail_dosen.html?kodedsn=${dosen.kodedsn}" 
+                     class="inline-flex items-center px-3 py-1.5 bg-indigo-600 text-white text-sm font-medium rounded-md hover:bg-indigo-700 transition-colors">
+                    Lihat Detail
+                  </a>
+                </td>
+              </tr>
+            `;
+            $("#dosenList").append(row);
+          });
+        }
+
+        // Function to load dosen data
+        function loadDaftarDosen() {
+          $.ajax({
+            url: "../api/dosen.php",
+            type: "GET",
+            success: function (dosens) {
+              allDosen = dosens;
+              pagination.updateTotalItems(dosens.length);
+              displayDosen(1, pagination.pageSize);
+            },
+            error: function () {
+              toast.show("Error memuat data dosen", "error");
+            },
+          });
+        }
+
+        // Function to show toast messages
+        function showToast(message, type = "success") {
+          toast.show(message, type);
+        }
+
+        // Initialize authentication
+        const auth = new AuthService("../api/auth.php");
+        auth.setRedirectUrl("../index.html");
+        auth.startAuthCheck(5);
+
+        auth.checkAuth().then((user) => {
+          if (user) {
+            auth.updateUserGreeting(user);
+            loadDaftarDosen();
+          }
+        });
+      });
+    </script>
+  </body>
+</html>

@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Dashboard SIMUAS</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="../public/js/components/toast.js"></script>
+    <script src="../public/js/components/sidebar.js"></script>
+    <script src="../public/js/components/navbar.js"></script>
+    <script src="../public/js/utils/auth.js"></script>
+  </head>
+  <body class="bg-gray-100">
+    <div class="ml-[17rem]">
+      <div class="mt-32">
+        <div
+          class="bg-white shadow-md container mx-auto px-4 rounded-lg shadow-md mt-8"
+        >
+          <div class="p-8 h-max mb-12">
+            <div class="" id="mainContent">
+              <div class="grid grid-cols-4 gap-8">
+                <div
+                  class="bg-indigo-800 px-10 py-5 rounded-lg gap-4 flex flex-col"
+                >
+                  <h3 class="text-white font-semibold text-2xl">
+                    Total Mahasiswa
+                  </h3>
+                  <h1 class="text-white font-bold text-5xl" id="totalMahasiswa">
+                    0
+                  </h1>
+                </div>
+                <div
+                  class="bg-indigo-800 px-10 py-5 rounded-lg gap-4 flex flex-col"
+                >
+                  <h3 class="text-white font-semibold text-2xl">Total Dosen</h3>
+                  <h1 class="text-white font-bold text-5xl" id="totalDosen">
+                    0
+                  </h1>
+                </div>
+                <div
+                  class="bg-indigo-800 px-10 py-5 rounded-lg gap-4 flex flex-col"
+                >
+                  <h3 class="text-white font-semibold text-2xl">
+                    Total Matakuliah
+                  </h3>
+                  <h1
+                    class="text-white font-bold text-5xl"
+                    id="totalMatakuliah"
+                  >
+                    0
+                  </h1>
+                </div>
+                <div
+                  class="bg-indigo-800 px-10 py-5 rounded-lg gap-4 flex flex-col"
+                >
+                  <h3 class="text-white font-semibold text-2xl">Total Kelas</h3>
+                  <h1 class="text-white font-bold text-5xl" id="totalKelas">
+                    0
+                  </h1>
+                </div>
+              </div>
+              <div class="mt-8">
+                <!-- Students Section -->
+                <div class="mb-14">
+                  <div class="flex items-end justify-between my-4">
+                    <h1 class="text-grey-800 text-2xl font-semibold">
+                      Mahasiswa Terbaru
+                    </h1>
+                    <a href="./mahasiswa.html" class="flex items-end gap-2">
+                      <span class="font-semibold">Load More</span>
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="24"
+                        height="24"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        class="lucide lucide-arrow-right"
+                      >
+                        <path d="M5 12h14" />
+                        <path d="m12 5 7 7-7 7" />
+                      </svg>
+                    </a>
+                  </div>
+                  <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                      <tr>
+                        <th
+                          class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                        >
+                          NBI
+                        </th>
+                        <th
+                          class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                        >
+                          Nama
+                        </th>
+                        <th
+                          class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                        >
+                          Alamat
+                        </th>
+                        <th
+                          class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                        >
+                          Program studi
+                        </th>
+                        <th
+                          class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                        >
+                          IPK
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody
+                      id="recentStudentsList"
+                      class="bg-white divide-y divide-gray-200"
+                    ></tbody>
+                  </table>
+                </div>
+
+                <!-- Lecturers Section -->
+                <div>
+                  <div class="flex items-end justify-between my-4">
+                    <h1 class="text-grey-800 text-2xl font-semibold">
+                      Dosen Terbaru
+                    </h1>
+                    <a href="./dosen.html" class="flex items-end gap-2">
+                      <span class="font-semibold">Load More</span>
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="24"
+                        height="24"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        class="lucide lucide-arrow-right"
+                      >
+                        <path d="M5 12h14" />
+                        <path d="m12 5 7 7-7 7" />
+                      </svg>
+                    </a>
+                  </div>
+                  <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                      <tr>
+                        <th
+                          class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                        >
+                          Kode Dosen
+                        </th>
+                        <th
+                          class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                        >
+                          Nama
+                        </th>
+                        <th
+                          class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                        >
+                          Alamat
+                        </th>
+                        <th
+                          class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                        >
+                          Prodi
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody
+                      id="recentLecturersList"
+                      class="bg-white divide-y divide-gray-200"
+                    ></tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const toast = new Toast();
+      const auth = new AuthService("../api/auth.php");
+
+      auth.setRedirectUrl("../index.html");
+
+      auth.startAuthCheck(5);
+
+      auth.checkAuth().then((user) => {
+        if (user) {
+          auth.updateUserGreeting(user);
+          loadDashboardData();
+        }
+      });
+
+      function showToast(message, type = "success") {
+        toast.show(message, type);
+      }
+
+      document.addEventListener("DOMContentLoaded", () => {
+        const navbar = new Navbar({
+          containerId: "navbar",
+          title: "Dashboard SIMUAS",
+          onLogout: () => {
+            toast.show("Logout successful", "success");
+            setTimeout(() => {
+              window.location.href = "../index.html";
+            }, 1000);
+          },
+        });
+
+        const sidebar = new Sidebar({
+          menuItems: [
+            { name: "Home", path: "/uas/view/index.html" },
+            { name: "Mahasiswa", path: "/uas/view/mahasiswa.html" },
+            { name: "Dosen", path: "/uas/view/mahasiswa.html" },
+            { name: "Matakuliah", path: "/uas/view/mahasiswa.html" },
+            { name: "Grafik", path: "/uas/view/mahasiswa.html" },
+            { name: "Laporan", path: "/uas/view/mahasiswa.html" },
+          ],
+        });
+      });
+
+      function loadDashboardData() {
+        $.ajax({
+          url: "../api/dashboard.php",
+          type: "GET",
+          success: function (response) {
+            if (response.success) {
+              // Update counts
+              $("#totalMahasiswa").text(response.counts.mahasiswa);
+              $("#totalDosen").text(response.counts.dosen);
+              $("#totalMatakuliah").text(response.counts.matakuliah);
+              $("#totalKelas").text(response.counts.kelas);
+
+              const studentsList = $("#recentStudentsList");
+              studentsList.empty();
+              response.recent.mahasiswa.forEach((student) => {
+                studentsList.append(`
+                        <tr>
+                            <td class="px-6 py-4 whitespace-nowrap">${student.nbi}</td>
+                            <td class="px-6 py-4 whitespace-nowrap">${student.nama}</td>
+                            <td class="px-6 py-4 whitespace-nowrap">${student.alamat}</td>
+                            <td class="px-6 py-4 whitespace-nowrap">${student.prodi}</td>
+                            <td class="px-6 py-4 whitespace-nowrap">${student.ipk}</td>
+                        </tr>
+                    `);
+              });
+
+              // Update recent lecturers
+              const lecturersList = $("#recentLecturersList");
+              lecturersList.empty();
+              response.recent.dosen.forEach((lecturer) => {
+                lecturersList.append(`
+                        <tr>
+                            <td class="px-6 py-4 whitespace-nowrap">${lecturer.kodedsn}</td>
+                            <td class="px-6 py-4 whitespace-nowrap">${lecturer.nama}</td>
+                            <td class="px-6 py-4 whitespace-nowrap">${lecturer.alamat}</td>
+                            <td class="px-6 py-4 whitespace-nowrap">${lecturer.prodi}</td>
+                        </tr>
+                    `);
+              });
+            } else {
+              showToast("Error loading dashboard data", "error");
+            }
+          },
+          error: function () {
+            showToast("Failed to load dashboard data", "error");
+          },
+        });
+      }
+    </script>
+  </body>
+</html>

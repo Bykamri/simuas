@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Tambah Dosen</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="../../public/js/components/input.js"></script>
+    <script src="../../public/js/components/toast.js"></script>
+    <script src="../../public/js/utils/auth.js"></script>
+  </head>
+  <body class="bg-gray-100">
+    <div class="container mx-auto px-4 py-8">
+      <div class="flex justify-between items-center mb-8">
+        <h1 class="text-3xl font-bold">Tambah Dosen Baru</h1>
+        <a href="../dosen.html" class="text-indigo-600 hover:text-indigo-800">
+          Kembali ke Daftar
+        </a>
+      </div>
+
+      <div class="bg-white rounded-lg shadow-md p-6">
+        <form id="dosenForm" class="space-y-4">
+          <div id="formContainer" class="flex flex-col gap-5"></div>
+
+          <div class="flex space-x-4">
+            <button
+              type="submit"
+              class="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700"
+            >
+              Tambah Dosen
+            </button>
+            <button
+              type="reset"
+              class="bg-gray-500 text-white px-4 py-2 rounded-md hover:bg-gray-600"
+            >
+              Bersihkan Form
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <script>
+      const toast = new Toast();
+      const auth = new AuthService("../../api/auth.php");
+
+      function showToast(message, type = "success") {
+        toast.show(message, type);
+      }
+
+      function createFormFields() {
+        const formContainer = document.getElementById("formContainer");
+
+        // Kode Dosen field
+        formContainer.appendChild(
+          createTextInput({
+            label: "Kode Dosen",
+            id: "kodedsn",
+            required: true,
+            maxLength: 10,
+          })
+        );
+
+        // Nama field
+        formContainer.appendChild(
+          createTextInput({
+            label: "Nama",
+            id: "nama",
+            required: true,
+            maxLength: 100,
+          })
+        );
+
+        // Email field
+        formContainer.appendChild(
+          createTextInput({
+            label: "Email",
+            id: "email",
+            required: true,
+            options: { type: "email" },
+          })
+        );
+
+        // Alamat field
+        formContainer.appendChild(
+          createTextArea({
+            label: "Alamat",
+            id: "alamat",
+            required: true,
+            rows: 3,
+          })
+        );
+
+        // Program Studi field
+        formContainer.appendChild(
+          createTextInput({
+            label: "Program Studi",
+            id: "prodi",
+            required: true,
+            maxLength: 50,
+          })
+        );
+
+        // Jabatan field
+        formContainer.appendChild(
+          createTextInput({
+            label: "Jabatan",
+            id: "jabatan",
+            required: true,
+            maxLength: 50,
+          })
+        );
+      }
+
+      // Form submission handler
+      function handleFormSubmit(event) {
+        event.preventDefault();
+        const formData = new FormData(event.target);
+
+        $.ajax({
+          url: "../../api/dosen.php",
+          type: "POST",
+          data: formData,
+          processData: false,
+          contentType: false,
+          success: function (response) {
+            let jsonResponse =
+              typeof response === "string" ? JSON.parse(response) : response;
+
+            if (jsonResponse.success) {
+              showToast(jsonResponse.message || "Dosen berhasil ditambahkan");
+              setTimeout(() => (window.location.href = "../dosen.html"), 1000);
+            } else {
+              showToast(
+                jsonResponse.message || "Gagal menambahkan dosen",
+                "error"
+              );
+            }
+          },
+          error: function (xhr) {
+            try {
+              const response = JSON.parse(xhr.responseText);
+              showToast(response.message || "Gagal menambahkan dosen", "error");
+            } catch (e) {
+              showToast("Gagal menambahkan dosen", "error");
+            }
+          },
+        });
+      }
+
+      // Form reset handler
+      function handleFormReset() {
+        document.getElementById("dosenForm").reset();
+      }
+
+      // Initialize everything when document is ready
+      $(document).ready(async function () {
+        // Initialize form components
+        FormComponents.initializeInputs();
+
+        // Set up auth service
+        auth.setRedirectUrl("../../index.html");
+
+        // Initial auth check
+        await auth.checkAuth();
+
+        // Start periodic auth checks
+        auth.startAuthCheck(5);
+
+        // Create form fields
+        createFormFields();
+
+        // Set up event handlers
+        const form = document.getElementById("dosenForm");
+        form.addEventListener("submit", handleFormSubmit);
+        form.addEventListener("reset", handleFormReset);
+      });
+    </script>
+  </body>
+</html>

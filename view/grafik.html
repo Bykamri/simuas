@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Sistem Manajemen Mahasiswa</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <script src="../public/js/components/sidebar.js"></script>
+    <script src="../public/js/components/navbar.js"></script>
+    <script src="../public/js/components/toast.js"></script>
+    <script src="../public/js/components/label.js"></script>
+    <script src="../public/js/utils/auth.js"></script>
+  </head>
+  <body class="bg-gray-100">
+    <div class="ml-[17rem]">
+      <div class="mt-32 mb-12">
+        <div
+          class="bg-white shadow-md container mx-auto px-4 rounded-lg shadow-md mt-8 h-max"
+        >
+          <div class="p-8">
+            <h1 class="text-2xl font-bold mb-6">Grafik Total SPP per Status</h1>
+            <div class="w-full h-[400px]">
+              <canvas id="sppChart"></canvas>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const toast = new Toast();
+      const auth = new AuthService("../api/auth.php");
+
+      auth.setRedirectUrl("../index.html");
+
+      auth.startAuthCheck(5);
+
+      auth.checkAuth().then((user) => {
+        if (user) {
+          auth.updateUserGreeting(user);
+          loadSPPData();
+        }
+      });
+
+      function showToast(message, type = "success") {
+        toast.show(message, type);
+      }
+
+      document.addEventListener("DOMContentLoaded", () => {
+        const navbar = new Navbar({
+          containerId: "navbar",
+          title: "Dashboard SIMUAS",
+          onLogout: () => {
+            toast.show("Logout successful", "success");
+            setTimeout(() => {
+              window.location.href = "../index.html";
+            }, 1000);
+          },
+        });
+
+        const sidebar = new Sidebar({
+          menuItems: [
+            { name: "Home", path: "/uas/view/index.html" },
+            { name: "Mahasiswa", path: "/uas/view/mahasiswa.html" },
+            { name: "Dosen", path: "/uas/view/mahasiswa.html" },
+            { name: "Matakuliah", path: "/uas/view/mahasiswa.html" },
+            { name: "Grafik", path: "/uas/view/mahasiswa.html" },
+            { name: "Laporan", path: "/uas/view/mahasiswa.html" },
+          ],
+        });
+      });
+
+      function loadSPPData() {
+        $.ajax({
+          url: "../api/mahasiswa.php",
+          type: "GET",
+          success: function (mahasiswas) {
+            const sppByStatus = {};
+
+            mahasiswas.forEach((mahasiswa) => {
+              if (!sppByStatus[mahasiswa.status]) {
+                sppByStatus[mahasiswa.status] = 0;
+              }
+              sppByStatus[mahasiswa.status] += parseFloat(mahasiswa.spp || 0);
+            });
+
+            const ctx = document.getElementById("sppChart").getContext("2d");
+            new Chart(ctx, {
+              type: "bar",
+              data: {
+                labels: Object.keys(sppByStatus),
+                datasets: [
+                  {
+                    label: "Total SPP",
+                    data: Object.values(sppByStatus),
+                    backgroundColor: [
+                      "rgba(54, 162, 235, 0.5)",
+                      "rgba(255, 99, 132, 0.5)",
+                      "rgba(75, 192, 192, 0.5)",
+                    ],
+                    borderColor: [
+                      "rgba(54, 162, 235, 1)",
+                      "rgba(255, 99, 132, 1)",
+                      "rgba(75, 192, 192, 1)",
+                    ],
+                    borderWidth: 1,
+                  },
+                ],
+              },
+              options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                  y: {
+                    beginAtZero: true,
+                    ticks: {
+                      callback: function (value) {
+                        return "Rp " + value.toLocaleString("id-ID");
+                      },
+                    },
+                  },
+                },
+                plugins: {
+                  tooltip: {
+                    callbacks: {
+                      label: function (context) {
+                        return (
+                          "Total SPP: Rp " + context.raw.toLocaleString("id-ID")
+                        );
+                      },
+                    },
+                  },
+                },
+              },
+            });
+          },
+          error: function () {
+            showToast("Error memuat data SPP", "error");
+          },
+        });
+      }
+    </script>
+  </body>
+</html>

@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Detail Mahasiswa</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="../../public/js/components/toast.js"></script>
+    <script src="../../public/js/components/label.js"></script>
+    <script src="../../public/js/components/dialog.js"></script>
+    <script src="../../public/js/utils/auth.js"></script>
+  </head>
+  <body class="bg-gray-100">
+    <div class="container mx-auto px-4 py-8">
+      <div class="mb-6">
+        <a
+          href="../mahasiswa.html"
+          class="text-indigo-600 hover:text-indigo-800"
+          >← Kembali ke Daftar</a
+        >
+      </div>
+
+      <div class="bg-white rounded-lg shadow-md p-8">
+        <div class="flex gap-4 items-start">
+          <h1 class="text-3xl font-bold mb-6" id="headerMahasiswa"></h1>
+          <p id="detailStatus" class="uppercase text-2xl"></p>
+        </div>
+
+        <div id="mahasiswaDetails" class="space-y-6">
+          <div class="flex gap-10">
+            <!-- Files Section -->
+            <div class="grid grid-rows-2 pb-6">
+              <!-- Photo Section -->
+              <div>
+                <h2 class="text-sm font-medium text-gray-500 mb-3">Foto</h2>
+                <div class="mt-2">
+                  <img
+                    id="mahasiswaPhoto"
+                    src=""
+                    alt="Foto Mahasiswa"
+                    class="h-48 w-48 object-cover rounded-lg shadow-md hidden"
+                    onerror="this.src='../assets/default-avatar.png'; this.onerror=null"
+                  />
+                  <p id="noPhotoText" class="text-gray-500 italic hidden">
+                    Foto tidak tersedia
+                  </p>
+                </div>
+              </div>
+
+              <!-- PDF Section -->
+              <div>
+                <h2 class="text-sm font-medium text-gray-500 mb-3">
+                  Dokumen PDF
+                </h2>
+                <div id="pdfContainer" class="mt-2">
+                  <div id="hasPdf" class="hidden">
+                    <div class="flex items-center space-x-3 mb-3">
+                      <svg
+                        class="w-8 h-8 text-red-500"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"
+                        ></path>
+                      </svg>
+                      <div class="flex flex-col">
+                        <span
+                          id="pdfFileName"
+                          class="text-sm font-medium"
+                        ></span>
+                        <a
+                          id="pdfDownloadLink"
+                          href="#"
+                          target="_blank"
+                          class="text-indigo-600 hover:text-indigo-800 text-sm"
+                        >
+                          Unduh PDF
+                        </a>
+                      </div>
+                    </div>
+                    <div class="border rounded-lg p-4">
+                      <iframe
+                        id="pdfViewer"
+                        class="w-full h-48"
+                        src=""
+                        type="application/pdf"
+                        width="100%"
+                        height="100%"
+                      ></iframe>
+                    </div>
+                  </div>
+                  <p id="noPdfText" class="text-gray-500 italic hidden">
+                    Dokumen PDF tidak tersedia
+                  </p>
+                </div>
+              </div>
+            </div>
+            <section class="flex grow flex-row gap-8">
+              <!-- Mahasiswa Information -->
+
+              <div class="flex flex-col gap-8">
+                <h2 class="text-xl font-medium text-gray-500 uppercase">NBI</h2>
+                <h2 class="text-xl font-medium text-gray-500 uppercase">
+                  EMAIL
+                </h2>
+                <h2 class="text-xl font-medium text-gray-500 uppercase">
+                  Nama
+                </h2>
+                <h2 class="text-xl font-medium text-gray-500 uppercase">
+                  Alamat
+                </h2>
+                <h2 class="text-xl font-medium text-gray-500 uppercase">ipk</h2>
+                <h2 class="text-xl font-medium text-gray-500 uppercase">spp</h2>
+                <h2 class="text-xl font-medium text-gray-500 uppercase">
+                  Program studi
+                </h2>
+              </div>
+
+              <div class="flex flex-col gap-8">
+                <p id="detailNbi" class="text-xl"></p>
+                <p id="detailEmail" class="text-xl"></p>
+                <p id="detailNama" class="text-xl"></p>
+                <p id="detailAlamat" class="text-xl"></p>
+                <p id="detailIpk" class="text-xl"></p>
+                <p id="detailSpp" class="text-xl"></p>
+                <p id="detailProdi" class="text-xl"></p>
+                <p id="detailNama" class="text-xl"></p>
+              </div>
+            </section>
+          </div>
+
+          <div class="flex space-x-4 pt-4">
+            <button
+              onclick="window.location.href='./edit_mahasiswa.html?nbi=' + currentMahasiswaId"
+              class="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700"
+            >
+              Edit Mahasiswa
+            </button>
+            <button
+              onclick="showDeleteDialog()"
+              class="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700"
+            >
+              Hapus Mahasiswa
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      let currentMahasiswaId;
+      let isLoading = false;
+      let deleteDialog;
+      const toast = new Toast();
+      const auth = new AuthService("../../api/auth.php");
+
+      function formatRupiah(number) {
+        return new Intl.NumberFormat("id-ID", {
+          style: "currency",
+          currency: "IDR",
+          minimumFractionDigits: 0,
+          maximumFractionDigits: 0,
+        }).format(number);
+      }
+
+      function showToast(message, type = "success") {
+        toast.show(message, type);
+      }
+
+      function showDeleteDialog() {
+        const mahasiswaNama = document.getElementById("detailNama").textContent;
+
+        // Initialize delete dialog if not already created
+        if (!deleteDialog) {
+          deleteDialog = new Dialog({
+            title: "Hapus Mahasiswa",
+            message: `Apakah anda yakin ingin menghapus ${mahasiswaNama}? Tindakan ini tidak dapat dibatalkan.`,
+            confirmText: "Hapus",
+            cancelText: "Batal",
+            onConfirm: () => {
+              deleteMahasiswa();
+            },
+          });
+        } else {
+          // Update dialog content if already exists
+          deleteDialog.setContent({
+            message: `Apakah anda yakin ingin menghapus ${mahasiswaNama}? Tindakan ini tidak dapat dibatalkan.`,
+          });
+        }
+
+        deleteDialog.show();
+      }
+
+      function deleteMahasiswa() {
+        if (isLoading) return;
+        isLoading = true;
+
+        $.ajax({
+          url: "../../api/mahasiswa.php",
+          type: "DELETE",
+          contentType: "application/json",
+          data: JSON.stringify({ nbi: currentMahasiswaId }),
+          success: function (response) {
+            if (response.success) {
+              showToast("Mahasiswa berhasil dihapus");
+              setTimeout(() => {
+                window.location.href = "../mahasiswa.html";
+              }, 1000);
+            } else {
+              showToast(
+                response.message || "Error menghapus mahasiswa",
+                "error"
+              );
+            }
+          },
+          error: function (xhr, status, error) {
+            showToast("Error menghapus mahasiswa", "error");
+          },
+          complete: function () {
+            isLoading = false;
+          },
+        });
+      }
+
+      function displayMahasiswaPhoto(photoUrl) {
+        const photoImg = document.getElementById("mahasiswaPhoto");
+        const noPhotoText = document.getElementById("noPhotoText");
+
+        if (photoUrl) {
+          photoImg.src = "../../public/uploads/photos/" + photoUrl;
+          photoImg.classList.remove("hidden");
+          noPhotoText.classList.add("hidden");
+        } else {
+          photoImg.classList.add("hidden");
+          noPhotoText.classList.remove("hidden");
+        }
+      }
+
+      function displayMahasiswaPdf(pdfUrl) {
+        const hasPdf = document.getElementById("hasPdf");
+        const noPdfText = document.getElementById("noPdfText");
+        const pdfViewer = document.getElementById("pdfViewer");
+        const pdfDownloadLink = document.getElementById("pdfDownloadLink");
+        const pdfFileName = document.getElementById("pdfFileName");
+
+        if (pdfUrl) {
+          // Changed from photos to pdfs in the path
+          const fullPdfUrl = "../../public/uploads/pdfs/" + pdfUrl;
+          pdfViewer.src = fullPdfUrl;
+          pdfDownloadLink.href = fullPdfUrl;
+          pdfFileName.textContent = pdfUrl;
+          hasPdf.classList.remove("hidden");
+          noPdfText.classList.add("hidden");
+        } else {
+          hasPdf.classList.add("hidden");
+          noPdfText.classList.remove("hidden");
+        }
+      }
+
+      function loadMahasiswaDetails(nbi) {
+        if (isLoading) return;
+        isLoading = true;
+
+        $.ajax({
+          url: "../../api/mahasiswa.php?nbi=" + nbi,
+          type: "GET",
+          success: function (mahasiswa) {
+            $("#headerMahasiswa").text(mahasiswa.nama);
+            $("#detailNbi").text(mahasiswa.nbi);
+            $("#detailNama").text(mahasiswa.nama);
+            $("#detailEmail").text(mahasiswa.email);
+            $("#detailAlamat").text(mahasiswa.alamat);
+            $("#detailIpk").text(mahasiswa.ipk);
+            $("#detailSpp").text(formatRupiah(mahasiswa.spp));
+            $("#detailProdi").text(mahasiswa.prodi);
+            $("#detailStatus").html(StatusLabel.render(mahasiswa.status));
+
+            displayMahasiswaPhoto(mahasiswa.photo);
+            displayMahasiswaPdf(mahasiswa.pdf_file);
+          },
+          error: function (xhr, status, error) {
+            showToast("Error memuat detail mahasiswa", "error");
+            setTimeout(() => {
+              window.location.href = "../mahasiswa.html";
+            }, 1000);
+          },
+          complete: function () {
+            isLoading = false;
+          },
+        });
+      }
+
+      $(document).ready(async function () {
+        const urlParams = new URLSearchParams(window.location.search);
+        currentMahasiswaId = urlParams.get("nbi");
+        auth.setRedirectUrl("../../index.html");
+
+        // Initial auth check
+        await auth.checkAuth();
+
+        // Start periodic auth checks
+        auth.startAuthCheck(5);
+
+        if (currentMahasiswaId) {
+          loadMahasiswaDetails(currentMahasiswaId);
+        } else {
+          window.location.href = "../mahasiswa.html";
+        }
+      });
+    </script>
+  </body>
+</html>

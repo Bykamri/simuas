@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Sistem Manajemen Mahasiswa</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="../public/js/components/sidebar.js"></script>
+    <script src="../public/js/components/navbar.js"></script>
+    <script src="../public/js/components/toast.js"></script>
+    <script src="../public/js/components/label.js"></script>
+    <script src="../public/js/utils/auth.js"></script>
+    <script src="../public/js/components/pagination.js"></script>
+  </head>
+  <body class="bg-gray-100">
+    <div class="ml-[17rem]">
+      <div class="mt-32 mb-12">
+        <div
+          class="bg-white shadow-md container mx-auto px-4 rounded-lg shadow-md mt-8 h-min"
+        >
+          <div class="flex justify-between items-center p-6 mb-5">
+            <h2 class="text-xl font-semibold">Daftar Mahasiswa</h2>
+            <a
+              href="./mahasiswa/add_mahasiswa.html"
+              class="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 transition-colors"
+            >
+              Tambahkan Mahasiswa
+            </a>
+          </div>
+
+          <div class="">
+            <table class="min-w-full divide-y divide-gray-200">
+              <thead class="bg-gray-50">
+                <tr>
+                  <th
+                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                  >
+                    NBI
+                  </th>
+                  <th
+                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                  >
+                    Nama
+                  </th>
+                  <th
+                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                  >
+                    Alamat
+                  </th>
+                  <th
+                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                  >
+                    IPK
+                  </th>
+                  <th
+                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                  >
+                    Status
+                  </th>
+                  <th
+                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                  >
+                    Aksi
+                  </th>
+                </tr>
+              </thead>
+              <tbody
+                id="mahasiswaList"
+                class="bg-white divide-y divide-gray-200"
+              >
+                <!-- Data mahasiswa akan dimuat di sini -->
+              </tbody>
+            </table>
+
+            <!-- Pagination container -->
+            <div id="paginationContainer"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      document.addEventListener("DOMContentLoaded", () => {
+        let allMahasiswa = [];
+
+        // Initialize components
+        const toast = new Toast();
+
+        // Initialize navbar
+        const navbar = new Navbar({
+          containerId: "navbar",
+          title: "Dashboard SIMUAS",
+          onLogout: () => {
+            toast.show("Logout successful", "success");
+            setTimeout(() => {
+              window.location.href = "../index.html";
+            }, 1000);
+          },
+        });
+
+        // Initialize sidebar
+        const sidebar = new Sidebar({
+          menuItems: [
+            { name: "Home", path: "/uas/view/index.html" },
+            { name: "Mahasiswa", path: "/uas/view/mahasiswa.html" },
+            { name: "Dosen", path: "/uas/view/mahasiswa.html" },
+            { name: "Matakuliah", path: "/uas/view/mahasiswa.html" },
+            { name: "Grafik", path: "/uas/view/mahasiswa.html" },
+            { name: "Laporan", path: "/uas/view/mahasiswa.html" },
+          ],
+        });
+
+        // Initialize pagination
+        // Di dalam DOMContentLoaded event listener
+        // Initialize pagination
+        const pagination = new Pagination({
+          containerId: "paginationContainer",
+          pageSize: 10,
+          onPageChange: (page, pageSize) => {
+            displayMahasiswa(page, pageSize);
+          },
+        });
+
+        // Function to display mahasiswa data
+        function displayMahasiswa(page, pageSize) {
+          const start = (page - 1) * pageSize;
+          const end = start + pageSize;
+          const paginatedData = allMahasiswa.slice(start, end);
+
+          $("#mahasiswaList").empty();
+          paginatedData.forEach(function (mahasiswa) {
+            const row = `
+                  <tr class="hover:bg-gray-50 transition-colors">
+                    <td class="px-6 py-4 whitespace-nowrap">
+                      <span class="text-indigo-600">${mahasiswa.nbi}</span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">${
+                      mahasiswa.nama
+                    }</td>
+                    <td class="px-6 py-4 whitespace-nowrap">${
+                      mahasiswa.alamat || "-"
+                    }</td>
+                    <td class="px-6 py-4 whitespace-nowrap">${
+                      mahasiswa.ipk || "-"
+                    }</td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                      ${StatusLabel.render(mahasiswa.status)}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                      <div class="flex space-x-2">
+                        <button onclick="goToDetail('${mahasiswa.nbi}')" 
+                            class="inline-flex items-center px-3 py-1.5 bg-indigo-600 text-white text-sm font-medium rounded-md hover:bg-indigo-700 transition-colors">
+                          Lihat Detail
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                `;
+            $("#mahasiswaList").append(row);
+          });
+        }
+        // Function to load mahasiswa data
+        function loadDaftarMahasiswa() {
+          $.ajax({
+            url: "../api/mahasiswa.php",
+            type: "GET",
+            success: function (mahasiswas) {
+              allMahasiswa = mahasiswas;
+              pagination.updateTotalItems(mahasiswas.length);
+              displayMahasiswa(1, pagination.pageSize);
+            },
+            error: function () {
+              toast.show("Error memuat data mahasiswa", "error");
+            },
+          });
+        }
+
+        // Function to show toast messages
+        function showToast(message, type = "success") {
+          toast.show(message, type);
+        }
+
+        // Function to go to detail page
+        window.goToDetail = function (nbi) {
+          window.location.href = `./mahasiswa/detail_mahasiswa.html?nbi=${nbi}`;
+        };
+
+        // Initialize authentication
+        const auth = new AuthService("../api/auth.php");
+        auth.setRedirectUrl("../index.html");
+        auth.startAuthCheck(5);
+
+        auth.checkAuth().then((user) => {
+          if (user) {
+            auth.updateUserGreeting(user);
+            loadDaftarMahasiswa();
+          }
+        });
+      });
+    </script>
+  </body>
+</html>
